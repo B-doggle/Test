@@ -1,12 +1,283 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!DOCTYPE html>
+<html lang="zh-cn">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>测试页</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
 </head>
 <body>
-  <p>我是测试页</p>
+    <script>
+        /******************* 定义整数选择器的类 *******************/
+        class numSelector
+        {
+            constructor()
+            {
+                this.bingo = [];  // 由随机数组成的数组，即用户最终需要的
+                this.runState = 1;
+                this.startNum = this.inputNum("请输入起始整数：",this.StartOrEndNumRule.bind(this)); 
+                if (this.runState === 0) return this;       
+                this.endNum = this.inputNum("请输入终止整数：",this.StartOrEndNumRule.bind(this));                
+                if (this.runState === 0) return this;
+                // 判断起始整数是否等于终止整数，是则直接打印该数
+                if (this.startNum === this.endNum) 
+                {
+                    this.range = [this.startNum];
+                    this.bingo = [this.startNum];
+                }
+                else
+                {
+                    // 起始和终止数字在大小关系上是由小到大
+                    this.makeSense.call(this);
+                    this.selectNum = this.inputNum("请输入从 " + this.startNum + "~" + this.endNum + " 中选择的个数：",this.selectNumRule.bind(this));    
+                    if (this.runState === 0) return this;            
+                    this.range = [];
+                    this.setRange();
+                    this.createRandNum();
+                }
+                this.printBingo();
+
+            }
+
+            // 起始和终止数字在大小关系上是由小到大
+            makeSense()
+            {
+                if (this.startNum > this.endNum) 
+                {
+                    let temp = this.endNum;
+                    this.endNum = this.startNum;
+                    this.startNum = temp;    
+                }
+            }
+
+            // 起始和终止整数的合法性判断规则
+            StartOrEndNumRule(num,hint,ruleItems) 
+            {
+                // 处理用户输入带点和00开头的内容（比如用户输入小数、以点开始或结尾的内容）
+                num = num.trim();
+                let regEx = /\.|^00/;
+                if (regEx.test(num)) 
+                {
+                    alert("请输入整数！");
+                    return this.inputNum(hint,ruleItems);
+                }                
+                num = Number(num);
+                // 处理用户输入非数字内容
+                if (num.valueOf() !== 0 && !num) 
+                {
+                    alert("请输入整数！");
+                    return this.inputNum(hint,ruleItems);
+                }
+                // 处理用户输入数字内容
+                else 
+                {
+                    num = num.valueOf();
+                    return num;
+                }
+            }
+
+            // 选择整数的个数的合法性判断规则
+            selectNumRule(num,hint,ruleItems) 
+            {
+                // 处理用户输入带点和00开头的内容（比如用户输入小数、以点开始或结尾的内容）
+                num = num.trim();
+                let 
+                    regEx = /\.|^00/,
+                    len = this.endNum - this.startNum + 1;
+                if (regEx.test(num)) 
+                {
+                    alert("请输入大于0且小于或等于" + len + "的整数");
+                    return this.inputNum(hint,ruleItems);
+                }
+                num = Number(num);
+                // 处理用户输入非数字内容
+                if (num.valueOf() !== 0 && !num) 
+                {
+                    alert("请输入大于0且小于或等于" + len + "的整数");
+                    return this.inputNum(hint,ruleItems);
+                }
+                // 处理用户输入数字内容
+                else 
+                {
+                    // 判断选择整数的个数是否在合法范围内
+                    if(num.valueOf() < 1 || num.valueOf() > len) 
+                    {
+                        alert("请输入大于0且小于或等于" + len + "的整数");
+                        return this.inputNum(hint,ruleItems);
+                    }
+                    else 
+                    {
+                        num = num.valueOf();
+                        return num;
+                    }
+                    
+                } 
+            }
+
+            // 输入数值
+            inputNum(hint,ruleItems)
+            {
+                let num = prompt(hint);
+                // 处理用户的取消请求
+                if (num === null) 
+                {
+                    this.runState = 0;
+                    return;
+                }
+                // 处理用户无输入内容或输入空格
+                else if(num.trim() === '')
+                {
+                    alert("请按要求输入内容！");
+                    return this.inputNum(hint,ruleItems);  
+                }
+                // 处理用户有输入内容
+                else 
+                {
+                    return ruleItems(num,hint,ruleItems);
+                }
+
+            }
+
+
+            // 给数字范围的数组赋值
+            setRange() 
+            {
+                let 
+                    len = this.endNum - this.startNum + 1,
+                    min = this.startNum;
+                for (let i = 0; i < len; i++) 
+                {
+                    this.range[i] = min;
+                    min++;
+                }
+            }
+
+            // 生成随机数并赋值给数组bingo，再替其排序
+            createRandNum() 
+            {
+                for (let i = 0; i < this.selectNum; i++) 
+                {
+                    let temp = this.range.splice(Math.floor(Math.random() * this.range.length),1);
+                    this.bingo.push(temp[0]);
+                }
+
+                // 給bingo数组排序
+                for (let i = 0; i < this.bingo.length; i++)
+                {
+                    for (let j = 0; j < this.bingo.length - i - 1; j++) 
+                    {
+                        if (this.bingo[j] > this.bingo[j + 1]) 
+                        {
+                            let temp = this.bingo[j + 1];
+                            this.bingo[j + 1] = this.bingo[j];
+                            this.bingo[j] = temp;    
+                        }
+                    }
+                }
+            }
+
+            // 给bingo数组大于零小于十的成员添加前缀0，并打印数组
+            printBingo()
+            {
+                // 添加前缀0
+                for (let i = 0; i < this.bingo.length; i++) 
+                {
+                    let flag = this.bingo[i] > 0 && this.bingo[i] < 10;
+                    this.bingo[i] = flag ? "0" + this.bingo[i] : this.bingo[i];
+                }
+
+                // 打印数组
+                if (this.bingo.length === 1) 
+                {
+                    alert("您要选择的数为 " + this.bingo[0]);
+                }
+                else 
+                {
+                    alert("您要选择的" + this.selectNum + "个数为：" + this.bingo.join());
+                }
+            }
+
+        };
+
+
+        /******************* 选整数程序 *******************/
+        function startNumSelector() 
+        {
+             // 输入开始和退出选整数程序的选项值
+            function inputPlayState(hint)
+            {
+                let num = prompt(hint);
+                // 处理用户的取消请求
+                if (num === null) 
+                {
+                    return 0;
+                }
+                // 处理用户无输入内容或输入空格
+                else if(num.trim() === '')
+                {
+                    alert("请按要求输入内容！");
+                    return inputPlayState(hint);  
+                }
+                // 处理用户有输入内容
+                else 
+                {
+                    // 处理用户输入带点和00开头的内容（比如用户输入小数、以点开始或结尾的内容）
+                    num = num.trim();
+                    let regEx = /\.|^00/;
+                    if (regEx.test(num)) 
+                    {
+                        alert("请按要求输入内容！");
+                        return inputPlayState(hint);
+                    }
+                    num = Number(num);
+                    // 处理用户输入其他非数字内容
+                    if (num.valueOf() !== 0 && !num) 
+                    {
+                        alert("请按要求输入内容！");
+                        return inputPlayState(hint);
+                    }
+                    // 处理用户输入数字内容
+                    else 
+                    {
+                        // 处理用户输入的数字不是1或0
+                        if(num.valueOf() !== 0 && num.valueOf() !== 1) 
+                        {
+                            alert("请按要求输入内容！");
+                            return inputPlayState(hint);
+                        }
+                        else 
+                        {
+                            num = num.valueOf();
+                            return num;
+                        }
+                    } 
+                }
+            }
+
+            function step() 
+            {
+                let obj = new numSelector();
+                if ("range" in obj) 
+                {
+                    let choice = inputPlayState("是否继续选数字程序？\n继续：1   退出：0");
+                    return choice;
+                }
+                else 
+                {
+                    return 0;
+                }
+            }
+
+            var choice = inputPlayState("欢迎使用选数字程序！\n开始：1   退出：0");    
+            while (choice) 
+            {
+                choice = step();
+            }
+            alert("退出成功，欢迎再次使用！");
+        }
+
+        /******************* 运行选整数程序 *******************/
+        startNumSelector();
+
+    </script>
 </body>
 </html>
